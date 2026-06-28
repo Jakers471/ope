@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overview - Oakville / 167 Events Analytics</title>
+<link rel="stylesheet" href="assets/theme.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">O</div>
+      <div><div class="title">Oakville Grill</div><div class="sub">167 Events</div></div>
+    </div>
+    <div class="nav-group">
+      <div class="label">Overview</div>
+      <div class="nav">
+        <a class="active" href="01-overview.html">Restaurant overview</a>
+        <a href="#">Coverage and demand</a>
+        <a href="#">Transfers / 167</a>
+      </div>
+    </div>
+    <div class="nav-group">
+      <div class="label">Front of House</div>
+      <div class="nav">
+        <a href="03-job-breakdown.html">Server <span class="count">112</span></a>
+        <a href="#">Busser <span class="count">48</span></a>
+        <a href="#">Runner <span class="count">31</span></a>
+        <a href="#">Bar <span class="count">22</span></a>
+        <a href="#">Captain / Host <span class="count">14</span></a>
+        <a href="#">Wine Sommelier <span class="count">9</span></a>
+      </div>
+    </div>
+    <div class="nav-group">
+      <div class="label">Back of House</div>
+      <div class="nav">
+        <a href="#">Line Cook <span class="count">37</span></a>
+        <a href="#">Prep Cook <span class="count">16</span></a>
+        <a href="#">Dishwasher <span class="count">19</span></a>
+        <a href="#">Pastry <span class="count">7</span></a>
+        <a href="#">Steward <span class="count">11</span></a>
+      </div>
+    </div>
+    <div class="nav-group">
+      <div class="label">People</div>
+      <div class="nav">
+        <a href="02-employee.html">Directory <span class="count">295</span></a>
+        <a href="#">Leaderboards</a>
+        <a href="#">Turnover</a>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-head">
+      <div>
+        <div class="crumbs"><b>Overview</b> / restaurant-wide</div>
+        <h1>Restaurant overview</h1>
+      </div>
+      <div class="toolbar">
+        <span class="chip">All time</span>
+        <span class="chip active">2023-04 - 2026-06</span>
+        <span class="chip">Last 90 days</span>
+      </div>
+    </div>
+
+    <!-- KPI row -->
+    <div class="grid cols-4">
+      <div class="card kpi"><div class="k-label">Total labor hours</div><div class="k-value">281,401</div><div class="k-sub">across 165 weeks <span class="delta up">+4.2%</span></div></div>
+      <div class="card kpi"><div class="k-label">Total shifts</div><div class="k-value">39,417</div><div class="k-sub">avg 239 / week <span class="delta up">+1.8%</span></div></div>
+      <div class="card kpi"><div class="k-label">Employees (all-time)</div><div class="k-value">295</div><div class="k-sub"><span class="tag active">82 active</span> <span class="tag inactive">213 inactive</span></div></div>
+      <div class="card kpi"><div class="k-label">167 / transfer shifts</div><div class="k-value">4,949</div><div class="k-sub">12.6% of all shifts <span class="delta up">+6.1%</span></div></div>
+    </div>
+
+    <div class="grid cols-3" style="margin-top:14px;">
+      <div class="card span-2">
+        <div class="card-head"><h3>Weekly labor hours</h3><span class="hint">165 weeks</span></div>
+        <div id="trend" class="chart"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Shift mix</h3><span class="hint">all time</span></div>
+        <div id="mix" class="chart"></div>
+        <div class="legend" style="margin-top:6px;">
+          <span><i style="background:#4c8dff"></i>AM 16,611</span>
+          <span><i style="background:#2dd4bf"></i>PM 17,857</span>
+          <span><i style="background:#f5b14c"></i>167 4,949</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid cols-2" style="margin-top:14px;">
+      <div class="card">
+        <div class="card-head"><h3>Hours by department</h3><span class="hint">stacked by shift</span></div>
+        <div id="dept" class="chart"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Headcount over time</h3><span class="hint">active roster per week</span></div>
+        <div id="head" class="chart"></div>
+      </div>
+    </div>
+
+    <div class="card span-2" style="margin-top:14px;">
+      <div class="card-head"><h3>Coverage heatmap - shifts by day of week x month</h3><span class="hint">demand intensity</span></div>
+      <div id="heat" class="chart short"></div>
+    </div>
+
+    <div class="section-title">Job types</div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="data">
+        <thead><tr>
+          <th class="rank">#</th><th>Job type</th><th>Group</th><th class="num">People</th>
+          <th class="num">Shifts</th><th class="num">Hours</th><th>Hours share</th>
+          <th class="num">PM %</th><th class="num">167</th>
+        </tr></thead>
+        <tbody id="jobrows"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+<div class="fakebadge">MOCKUP - fake data</div>
+
+<script src="assets/mock-data.js"></script>
+<script>
+const charts=[];
+function reg(id,opt){const e=echarts.init(document.getElementById(id));e.setOption(opt);charts.push(e);return e;}
+window.addEventListener('resize',()=>charts.forEach(c=>c.resize()));
+const A=C.accent,B=C.accent2,AM=C.amber;
+
+reg('trend', Object.assign({},ECHART_BASE,{
+  xAxis:catAxis(WEEK_LABELS,{boundaryGap:false,axisLabel:{interval:23,formatter:v=>v.slice(0,7)}}),
+  yAxis:valAxis(),
+  series:[{type:'line',data:weeklySeries(1700,360,0.6),smooth:true,showSymbol:false,
+    lineStyle:{width:2,color:A},areaStyle:{color:areaGrad(A)}}]
+}));
+
+reg('mix',{
+  tooltip:{...ECHART_BASE.tooltip,trigger:'item'},
+  series:[{type:'pie',radius:['58%','82%'],center:['50%','50%'],label:{show:false},
+    itemStyle:{borderColor:C.panel,borderWidth:2},
+    data:[{name:'PM',value:17857,itemStyle:{color:A}},
+          {name:'AM',value:16611,itemStyle:{color:B}},
+          {name:'167',value:4949,itemStyle:{color:AM}}]}]
+});
+
+const dj=['Dining','Kitchen','Catering','Bar','Other'];
+reg('dept',Object.assign({},ECHART_BASE,{
+  legend:Object.assign({},ECHART_BASE.legend,{data:['AM','PM','167']}),
+  xAxis:catAxis(dj),yAxis:valAxis(),
+  series:['AM','PM','167'].map((n,i)=>({name:n,type:'bar',stack:'d',barWidth:'52%',
+    itemStyle:{color:[B,A,AM][i]},data:dj.map(()=>rint(800,9000))}))
+}));
+
+reg('head',Object.assign({},ECHART_BASE,{
+  xAxis:catAxis(WEEK_LABELS,{boundaryGap:false,axisLabel:{interval:23,formatter:v=>v.slice(0,7)}}),
+  yAxis:valAxis(),
+  series:[{type:'line',data:weeklySeries(70,16,0.05),smooth:true,showSymbol:false,
+    lineStyle:{width:2,color:B},areaStyle:{color:areaGrad(B)}}]
+}));
+
+const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const months=Array.from({length:18},(_,i)=>{const d=new Date(2023,3+i,1);return d.toISOString().slice(0,7);});
+const hd=[];let mx=0;for(let x=0;x<months.length;x++)for(let y=0;y<7;y++){const v=rint(20,80)+(y>=4?34:0);mx=Math.max(mx,v);hd.push([x,y,v]);}
+reg('heat',{
+  tooltip:{...ECHART_BASE.tooltip,position:'top',formatter:p=>`${months[p.data[0]]} ${days[p.data[1]]}: ${p.data[2]} shifts`},
+  grid:{left:40,right:14,top:8,bottom:50,containLabel:true},
+  xAxis:{type:'category',data:months,axisLine:axisLine(),axisTick:{show:false},axisLabel:{color:C.text3,fontSize:9,rotate:40}},
+  yAxis:{type:'category',data:days,axisLine:axisLine(),axisTick:{show:false},axisLabel:{color:C.text3,fontSize:10}},
+  visualMap:{min:20,max:mx,calculable:true,orient:'horizontal',left:'center',bottom:0,textStyle:{color:C.text3,fontSize:10},inRange:{color:[C.panel,B,A]}},
+  series:[{type:'heatmap',data:hd,itemStyle:{borderColor:C.bg,borderWidth:2}}]
+});
+
+// job table
+const JOBROWS=[
+  ['Server','FOH',112,15788,109820,1.0,53,1840],
+  ['Busser','FOH',48,6056,40210,0.37,49,820],
+  ['Line Cook','BOH',37,5293,42180,0.51,61,540],
+  ['Runner','FOH',31,3006,19120,0.27,58,410],
+  ['Bar','FOH',22,2367,17240,0.24,66,300],
+  ['Prep Cook','BOH',16,1620,12740,0.18,12,90],
+  ['Dishwasher','BOH',19,1566,11210,0.16,44,70],
+];
+const maxH=Math.max(...JOBROWS.map(r=>r[4]));
+document.getElementById('jobrows').innerHTML=JOBROWS.map((r,i)=>`
+  <tr>
+    <td class="rank">${i+1}</td>
+    <td><b>${r[0]}</b></td>
+    <td><span class="tag ${r[1]==='FOH'?'pm':'am'}">${r[1]}</span></td>
+    <td class="num">${r[2]}</td>
+    <td class="num">${r[3].toLocaleString()}</td>
+    <td class="num">${r[4].toLocaleString()}</td>
+    <td><div class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:${Math.round(r[4]/maxH*100)}%"></div></div></div></td>
+    <td class="num">${r[6]}%</td>
+    <td class="num">${r[7]}</td>
+  </tr>`).join('');
+</script>
+</body>
+</html>

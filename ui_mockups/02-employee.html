@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Employee detail - Oakville / 167 Events</title>
+<link rel="stylesheet" href="assets/theme.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="logo">O</div><div><div class="title">Oakville Grill</div><div class="sub">167 Events</div></div></div>
+    <div class="nav-group"><div class="label">People directory</div>
+      <div class="nav" id="dir"></div>
+    </div>
+    <div class="nav-group"><div class="label">Jump to</div>
+      <div class="nav">
+        <a href="01-overview.html">Overview</a>
+        <a href="03-job-breakdown.html">Job breakdown</a>
+        <a href="chart-gallery.html">Chart gallery</a>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-head">
+      <div>
+        <div class="crumbs"><a href="01-overview.html">Overview</a> / <b>Server</b> / Reyes, Andre</div>
+        <h1 style="display:flex;align-items:center;gap:12px;">
+          <span class="avatar" style="width:34px;height:34px;font-size:13px;">AR</span>
+          Reyes, Andre M
+          <span class="tag active" style="font-size:11px;">Active</span>
+        </h1>
+        <div class="muted" style="font-size:12px;margin-top:4px;">Server - Dining Room - hired 2023-08-14</div>
+      </div>
+      <div class="toolbar"><span class="chip">Compare</span><span class="chip active">Profile</span></div>
+    </div>
+
+    <div class="grid cols-4">
+      <div class="card kpi"><div class="k-label">Total hours</div><div class="k-value">3,182</div><div class="k-sub">rank 4 of 112 servers</div></div>
+      <div class="card kpi"><div class="k-label">Total shifts</div><div class="k-value">421</div><div class="k-sub">avg 7.6 h / shift</div></div>
+      <div class="card kpi"><div class="k-label">Tenure</div><div class="k-value">1,038</div><div class="k-sub">days - first to last seen</div></div>
+      <div class="card kpi"><div class="k-label">167 transfers</div><div class="k-value">37</div><div class="k-sub">8.8% of shifts</div></div>
+    </div>
+
+    <div class="grid cols-3" style="margin-top:14px;">
+      <div class="card span-2">
+        <div class="card-head"><h3>Activity timeline - shifts per week</h3><span class="hint">gaps reveal breaks and vacations</span></div>
+        <div id="timeline" class="chart"></div>
+        <div class="legend" style="margin-top:4px;">
+          <span class="dim">Longest streak worked: <b style="color:#e6edf3">14 days</b></span>
+          <span class="dim" style="margin-left:18px;">Longest stretch off: <b style="color:#e6edf3">21 days</b> (2024-12-20 to 2025-01-10)</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Shift type breakdown</h3></div>
+        <div id="break" class="chart"></div>
+        <div class="legend" style="margin-top:6px;">
+          <span><i style="background:#4c8dff"></i>AM 148</span>
+          <span><i style="background:#2dd4bf"></i>PM 236</span>
+          <span><i style="background:#f5b14c"></i>167 37</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid cols-3" style="margin-top:14px;">
+      <div class="card">
+        <div class="card-head"><h3>Shifts by day of week</h3></div>
+        <div id="dow" class="chart short"></div>
+        <div class="note">Fri/Sat PM shifts: <b style="color:#e6edf3">96</b> - 4th-highest among servers.</div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Profile vs server average</h3></div>
+        <div id="radar" class="chart short"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Job history</h3><span class="hint">primary job changes</span></div>
+        <table class="data" style="margin-top:4px;">
+          <thead><tr><th>Date</th><th>From</th><th>To</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">2023-08-14</td><td class="dim">hired</td><td>Busser</td></tr>
+            <tr><td class="mono">2024-02-05</td><td>Busser</td><td>Runner</td></tr>
+            <tr><td class="mono">2024-09-30</td><td>Runner</td><td><b>Server</b></td></tr>
+          </tbody>
+        </table>
+        <div class="note">3 role changes in 1,038 days.</div>
+      </div>
+    </div>
+
+    <div class="section-title">Where 167 transfers were worked</div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="data">
+        <thead><tr><th>Venue</th><th>Department</th><th class="num">Shifts</th><th class="num">Hours</th><th>Share</th></tr></thead>
+        <tbody id="trrows"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+<div class="fakebadge">MOCKUP - fake data</div>
+
+<script src="assets/mock-data.js"></script>
+<script>
+const charts=[];
+function reg(id,opt){const e=echarts.init(document.getElementById(id));e.setOption(opt);charts.push(e);return e;}
+window.addEventListener('resize',()=>charts.forEach(c=>c.resize()));
+const A=C.accent,B=C.accent2,AM=C.amber;
+
+// directory list
+document.getElementById('dir').innerHTML = PEOPLE.slice(0,12).map((p,i)=>`
+  <a class="${i===2?'active':''}" href="#">${p.name.split(' ')[0]} ${p.name.split(', ')[1]?.split(' ')[0]||''}
+   <span class="count">${p.hours}h</span></a>`).join('');
+
+// timeline with a gap (vacation)
+const wk = WEEK_LABELS.slice(70,165);
+const vals = wk.map((_,i)=>{ if(i>=40&&i<43) return 0; return rint(2,6); });
+reg('timeline',Object.assign({},ECHART_BASE,{
+  xAxis:catAxis(wk,{boundaryGap:false,axisLabel:{interval:11,formatter:v=>v.slice(0,7)}}),
+  yAxis:valAxis({extra:{max:7}}),
+  series:[{type:'bar',data:vals,barWidth:'60%',
+    itemStyle:{color:p=> p.value===0? C.grid : A}}]
+}));
+
+reg('break',{
+  tooltip:{...ECHART_BASE.tooltip,trigger:'item'},
+  series:[{type:'pie',radius:['56%','80%'],label:{show:false},itemStyle:{borderColor:C.panel,borderWidth:2},
+    data:[{name:'PM',value:236,itemStyle:{color:A}},{name:'AM',value:148,itemStyle:{color:B}},{name:'167',value:37,itemStyle:{color:AM}}]}]
+});
+
+const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+reg('dow',Object.assign({},ECHART_BASE,{
+  grid:{left:30,right:12,top:10,bottom:24,containLabel:true},
+  xAxis:catAxis(days,{axisLabel:{fontSize:10}}),yAxis:valAxis(),
+  series:[{type:'bar',barWidth:'56%',data:[38,44,51,60,86,92,50],
+    itemStyle:{color:grad(A,B),borderRadius:[3,3,0,0]}}]
+}));
+
+reg('radar',{
+  tooltip:{...ECHART_BASE.tooltip},
+  radar:{indicator:[{name:'Hours',max:100},{name:'PM',max:100},{name:'Fri/Sat',max:100},{name:'167',max:100},{name:'Streak',max:100}],
+    axisName:{color:C.text2,fontSize:9},splitLine:{lineStyle:{color:C.grid}},splitArea:{areaStyle:{color:['transparent']}},axisLine:{lineStyle:{color:C.grid}}},
+  series:[{type:'radar',data:[
+    {value:[86,79,72,44,68],name:'Andre',areaStyle:{color:A+'33'},lineStyle:{color:A,width:2},itemStyle:{color:A}},
+    {value:[55,50,48,30,40],name:'Server avg',lineStyle:{color:C.text3,width:1,type:'dashed'},itemStyle:{color:C.text3},areaStyle:{color:'transparent'}}
+  ]}]
+});
+
+const TR=[['RPM Steak','Catering-Banquets',14,112],['167 Events- Offsite','Catering-Banquets',9,81],
+['Aba- Chicago','Dining Room',6,42],['Summer House','Bar',5,38],['RPM Seafood','Catering-Banquets',3,24]];
+const mx=Math.max(...TR.map(r=>r[2]));
+document.getElementById('trrows').innerHTML=TR.map(r=>`
+ <tr><td><b>${r[0]}</b></td><td class="dim">${r[1]}</td><td class="num">${r[2]}</td><td class="num">${r[3]}</td>
+ <td><div class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:${Math.round(r[2]/mx*100)}%;background:linear-gradient(90deg,#f5b14c,#a78bfa)"></div></div></div></td></tr>`).join('');
+</script>
+</body>
+</html>

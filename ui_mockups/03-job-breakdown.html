@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job breakdown - Server - Oakville / 167 Events</title>
+<link rel="stylesheet" href="assets/theme.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="logo">O</div><div><div class="title">Oakville Grill</div><div class="sub">167 Events</div></div></div>
+    <div class="nav-group"><div class="label">Front of House</div>
+      <div class="nav">
+        <a class="active" href="03-job-breakdown.html">Server <span class="count">112</span></a>
+        <a href="#">Busser <span class="count">48</span></a>
+        <a href="#">Runner <span class="count">31</span></a>
+        <a href="#">Bar <span class="count">22</span></a>
+      </div>
+    </div>
+    <div class="nav-group"><div class="label">Back of House</div>
+      <div class="nav">
+        <a href="#">Line Cook <span class="count">37</span></a>
+        <a href="#">Prep Cook <span class="count">16</span></a>
+        <a href="#">Dishwasher <span class="count">19</span></a>
+      </div>
+    </div>
+    <div class="nav-group"><div class="label">Jump to</div>
+      <div class="nav"><a href="01-overview.html">Overview</a><a href="02-employee.html">Employee detail</a></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-head">
+      <div>
+        <div class="crumbs"><a href="01-overview.html">Overview</a> / Front of House / <b>Server</b></div>
+        <h1>Server</h1>
+        <div class="muted" style="font-size:12px;margin-top:4px;">112 people - 15,788 shifts - 109,820 hours - Dining Room</div>
+      </div>
+      <div class="toolbar"><span class="chip active">Hours</span><span class="chip">Shifts</span><span class="chip">PM load</span></div>
+    </div>
+
+    <div class="grid cols-4">
+      <div class="card kpi"><div class="k-label">People (all-time)</div><div class="k-value">112</div><div class="k-sub"><span class="tag active">31 active</span> <span class="tag inactive">81 inactive</span></div></div>
+      <div class="card kpi"><div class="k-label">Total hours</div><div class="k-value">109,820</div><div class="k-sub">39% of restaurant hours</div></div>
+      <div class="card kpi"><div class="k-label">PM share</div><div class="k-value">53%</div><div class="k-sub">8,360 PM shifts</div></div>
+      <div class="card kpi"><div class="k-label">Median tenure</div><div class="k-value">214</div><div class="k-sub">days - high turnover role</div></div>
+    </div>
+
+    <div class="grid cols-3" style="margin-top:14px;">
+      <div class="card span-2">
+        <div class="card-head"><h3>Server hours per week</h3><span class="hint">category trend</span></div>
+        <div id="trend" class="chart"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Shift mix</h3></div>
+        <div id="mix" class="chart"></div>
+      </div>
+    </div>
+
+    <div class="grid cols-2" style="margin-top:14px;">
+      <div class="card">
+        <div class="card-head"><h3>Top servers by hours</h3><span class="hint">leaderboard</span></div>
+        <div id="rank" class="chart tall"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Fri / Sat PM load by server</h3><span class="hint">who carries the weekend</span></div>
+        <div id="weekend" class="chart tall"></div>
+      </div>
+    </div>
+
+    <div class="section-title">Server roster</div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="data">
+        <thead><tr>
+          <th class="rank">#</th><th>Name</th><th>Status</th><th class="num">Shifts</th>
+          <th class="num">Hours</th><th class="num">AM</th><th class="num">PM</th>
+          <th class="num">Fri/Sat PM</th><th class="num">167</th><th class="num">Tenure</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+<div class="fakebadge">MOCKUP - fake data</div>
+
+<script src="assets/mock-data.js"></script>
+<script>
+const charts=[];
+function reg(id,opt){const e=echarts.init(document.getElementById(id));e.setOption(opt);charts.push(e);return e;}
+window.addEventListener('resize',()=>charts.forEach(c=>c.resize()));
+const A=C.accent,B=C.accent2,AM=C.amber;
+
+reg('trend',Object.assign({},ECHART_BASE,{
+  xAxis:catAxis(WEEK_LABELS,{boundaryGap:false,axisLabel:{interval:23,formatter:v=>v.slice(0,7)}}),
+  yAxis:valAxis(),
+  series:[{type:'line',data:weeklySeries(660,140,0.3),smooth:true,showSymbol:false,lineStyle:{width:2,color:A},areaStyle:{color:areaGrad(A)}}]
+}));
+
+reg('mix',{tooltip:{...ECHART_BASE.tooltip,trigger:'item'},
+  series:[{type:'pie',radius:['56%','80%'],label:{show:false},itemStyle:{borderColor:C.panel,borderWidth:2},
+    data:[{name:'PM',value:8360,itemStyle:{color:A}},{name:'AM',value:5588,itemStyle:{color:B}},{name:'167',value:1840,itemStyle:{color:AM}}]}]});
+
+// roster data
+const ROSTER=PEOPLE.map((p,i)=>({
+  name:nameFor(i*2+3), active:rnd()>0.4, shifts:rint(40,520),
+})).map(r=>{
+  const hours=Math.round(r.shifts*(6+rnd()*2.5));
+  const pm=Math.round(r.shifts*(0.4+rnd()*0.3));
+  const am=r.shifts-pm-rint(0,40);
+  const t167=Math.max(0,r.shifts-pm-am);
+  return {...r,hours,pm,am:Math.max(0,am),t167,frisat:Math.round(pm*(0.3+rnd()*0.3)),tenure:rint(60,1150)};
+}).sort((a,b)=>b.hours-a.hours).slice(0,16);
+
+const top=ROSTER.slice(0,10).reverse();
+reg('rank',Object.assign({},ECHART_BASE,{
+  grid:{left:8,right:34,top:8,bottom:8,containLabel:true},
+  xAxis:valAxis(),yAxis:catAxis(top.map(p=>p.name.split(',')[0]),{extra:{axisLabel:{color:C.text2,fontSize:11}}}),
+  series:[{type:'bar',barWidth:'62%',data:top.map(p=>p.hours),
+    itemStyle:{color:grad(B,A),borderRadius:[0,4,4,0]},
+    label:{show:true,position:'right',color:C.text3,fontFamily:'monospace',fontSize:10}}]
+}));
+
+const topw=[...ROSTER].sort((a,b)=>b.frisat-a.frisat).slice(0,10).reverse();
+reg('weekend',Object.assign({},ECHART_BASE,{
+  grid:{left:8,right:34,top:8,bottom:8,containLabel:true},
+  xAxis:valAxis(),yAxis:catAxis(topw.map(p=>p.name.split(',')[0]),{extra:{axisLabel:{color:C.text2,fontSize:11}}}),
+  series:[{type:'bar',barWidth:'62%',data:topw.map(p=>p.frisat),
+    itemStyle:{color:grad(AM,C.pink),borderRadius:[0,4,4,0]},
+    label:{show:true,position:'right',color:C.text3,fontFamily:'monospace',fontSize:10}}]
+}));
+
+document.getElementById('rows').innerHTML=ROSTER.map((p,i)=>{
+  const init=p.name.split(', ')[1]?.[0]+''+p.name[0];
+  return `<tr>
+    <td class="rank">${i+1}</td>
+    <td><div class="namecell"><span class="avatar">${(p.name.split(', ')[1]||'X')[0]}${p.name[0]}</span>${p.name}</div></td>
+    <td><span class="tag ${p.active?'active':'inactive'}">${p.active?'Active':'Inactive'}</span></td>
+    <td class="num">${p.shifts}</td><td class="num">${p.hours.toLocaleString()}</td>
+    <td class="num">${p.am}</td><td class="num">${p.pm}</td><td class="num">${p.frisat}</td>
+    <td class="num">${p.t167}</td><td class="num">${p.tenure}d</td>
+  </tr>`;}).join('');
+</script>
+</body>
+</html>

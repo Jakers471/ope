@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockups - Oakville / 167 Events Analytics</title>
+<link rel="stylesheet" href="assets/theme.css">
+</head>
+<body>
+<div class="main" style="max-width:980px;margin:0 auto;">
+  <div class="brand" style="padding:8px 0 22px;">
+    <div class="logo" style="width:38px;height:38px;font-size:17px;">O</div>
+    <div><div class="title" style="font-size:16px;">Oakville Grill & Cellar</div><div class="sub">167 Events - schedule analytics</div></div>
+  </div>
+
+  <h1 style="font-size:22px;margin:0 0 6px;">UI mockups</h1>
+  <p class="muted" style="max-width:680px;font-size:13px;">
+    Design mockups for the scheduling-analytics app. All data shown is fake but matches the real
+    dataset shape (39,417 shifts, 295 people, 165 weeks, 281,401 hours). Charts use Apache ECharts.
+    Open any screen below. Requires an internet connection (ECharts loads from CDN).
+  </p>
+
+  <div class="grid cols-2" style="margin-top:18px;">
+    <a class="card" href="chart-gallery.html" style="display:block;">
+      <div class="card-head"><h3>Chart gallery</h3><span class="hint">start here</span></div>
+      <p class="muted" style="font-size:12px;margin:0;">Every chart type the product can use - line, stacked area, donut, ranking bar, heatmap, boxplot, gantt timeline, radar, gauge, scatter - plus a teal/amber style switch.</p>
+    </a>
+    <a class="card" href="01-overview.html" style="display:block;">
+      <div class="card-head"><h3>Restaurant overview</h3><span class="hint">screen 1</span></div>
+      <p class="muted" style="font-size:12px;margin:0;">Restaurant-wide KPIs, weekly labor-hour trend, shift mix, department hours, headcount, coverage heatmap, and a job-type table.</p>
+    </a>
+    <a class="card" href="03-job-breakdown.html" style="display:block;">
+      <div class="card-head"><h3>Job-type breakdown</h3><span class="hint">screen 2</span></div>
+      <p class="muted" style="font-size:12px;margin:0;">One job category (Server) drilled down - trend, mix, leaderboards for hours and Fri/Sat PM load, and the full roster table.</p>
+    </a>
+    <a class="card" href="02-employee.html" style="display:block;">
+      <div class="card-head"><h3>Employee deep dive</h3><span class="hint">screen 3</span></div>
+      <p class="muted" style="font-size:12px;margin:0;">One person - activity timeline with break/vacation gaps, longest streaks, shift breakdown, day-of-week, job history, and 167 transfer destinations.</p>
+    </a>
+  </div>
+
+  <div class="section-title">Navigation model</div>
+  <div class="card">
+    <pre class="mono" style="margin:0;color:var(--text-2);font-size:12px;line-height:1.6;">Overview (restaurant-wide)
+  -> Front of House / Back of House / Events-167
+       -> Job type  (Server, Busser, Line Cook, ...)
+            -> Person  (deep dive)
+  -> People directory, Leaderboards, Turnover</pre>
+  </div>
+
+  <p class="note" style="margin-top:18px;">See PROJECT.md for the full data dictionary and analytics catalog, and CLAUDE.md for project rules.</p>
+</div>
+<div class="fakebadge">MOCKUP - fake data</div>
+</body>
+</html>

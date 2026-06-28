@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chart Gallery - Oakville / 167 Events Analytics</title>
+<link rel="stylesheet" href="assets/theme.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+</head>
+<body>
+<div class="main" style="max-width:1280px;margin:0 auto;">
+  <div class="page-head">
+    <div>
+      <div class="crumbs"><b>Mockup</b> / chart gallery</div>
+      <h1>Chart library and visual styles</h1>
+      <div class="muted" style="font-size:12px;max-width:760px;margin-top:6px;">
+        Rendered with <b>Apache ECharts 5</b> (the recommended charting engine). Every chart below is
+        live and interactive - hover for tooltips. Data is fake but shaped like the real 39,417-shift
+        dataset. Use the accent switch to compare two dark style directions.
+      </div>
+    </div>
+    <div class="toolbar">
+      <span class="chip active" id="t-teal" onclick="setTheme('teal')">Teal / Slate</span>
+      <span class="chip" id="t-amber" onclick="setTheme('amber')">Amber / Graphite</span>
+    </div>
+  </div>
+
+  <div class="section-title">Trends over time</div>
+  <div class="grid cols-2">
+    <div class="card"><div class="card-head"><h3>1. Line + area - weekly labor hours</h3><span class="hint">line</span></div><div id="c1" class="chart"></div></div>
+    <div class="card"><div class="card-head"><h3>2. Stacked area - shift mix per week</h3><span class="hint">stacked area</span></div><div id="c2" class="chart"></div></div>
+  </div>
+
+  <div class="section-title">Composition and ranking</div>
+  <div class="grid cols-3">
+    <div class="card"><div class="card-head"><h3>3. Donut - department share</h3><span class="hint">donut</span></div><div id="c3" class="chart"></div></div>
+    <div class="card"><div class="card-head"><h3>4. Stacked bar - hours by job</h3><span class="hint">stacked bar</span></div><div id="c4" class="chart"></div></div>
+    <div class="card"><div class="card-head"><h3>5. Horizontal ranking - top servers</h3><span class="hint">bar</span></div><div id="c5" class="chart"></div></div>
+  </div>
+
+  <div class="section-title">Distribution and density</div>
+  <div class="grid cols-2">
+    <div class="card span-2"><div class="card-head"><h3>6. Heatmap - coverage by day of week x month</h3><span class="hint">heatmap</span></div><div id="c6" class="chart"></div></div>
+  </div>
+  <div class="grid cols-2">
+    <div class="card"><div class="card-head"><h3>7. Grouped bar - AM / PM / 167 by day</h3><span class="hint">grouped bar</span></div><div id="c7" class="chart"></div></div>
+    <div class="card"><div class="card-head"><h3>8. Boxplot - shift length spread by job</h3><span class="hint">boxplot</span></div><div id="c8" class="chart"></div></div>
+  </div>
+
+  <div class="section-title">People and tenure</div>
+  <div class="grid cols-2">
+    <div class="card span-2"><div class="card-head"><h3>9. Gantt-style timeline - employee tenure and turnover</h3><span class="hint">custom timeline</span></div><div id="c9" class="chart tall"></div></div>
+  </div>
+  <div class="grid cols-3">
+    <div class="card"><div class="card-head"><h3>10. Radar - one server profile</h3><span class="hint">radar</span></div><div id="c10" class="chart"></div></div>
+    <div class="card"><div class="card-head"><h3>11. Gauge - PM shift share</h3><span class="hint">gauge</span></div><div id="c11" class="chart"></div></div>
+    <div class="card"><div class="card-head"><h3>12. Scatter - tenure vs total hours</h3><span class="hint">scatter</span></div><div id="c12" class="chart"></div></div>
+  </div>
+
+  <div class="note" style="margin-top:18px;">
+    These 12 cover every visualization referenced in PROJECT.md. The same engine also does
+    calendar heatmaps, sankey (job-to-job flow), treemap (venue drill-down), and candlestick if needed.
+  </div>
+</div>
+
+<div class="fakebadge">MOCKUP - fake data</div>
+
+<script src="assets/mock-data.js"></script>
+<script>
+const charts = [];
+function reg(id, opt){ const el=echarts.init(document.getElementById(id),null,{renderer:'canvas'}); el.setOption(opt); charts.push(el); return el; }
+window.addEventListener('resize',()=>charts.forEach(c=>c.resize()));
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme', t==='amber'?'amber':'');
+  document.getElementById('t-teal').classList.toggle('active', t==='teal');
+  document.getElementById('t-amber').classList.toggle('active', t==='amber');
+  C.accent = t==='amber'? '#f5b14c':'#2dd4bf';
+  C.accent2 = t==='amber'? '#a78bfa':'#4c8dff';
+  render();
+}
+
+function render(){
+  charts.forEach(c=>c.dispose()); charts.length=0;
+  _seed=1337;
+  const A=C.accent, B=C.accent2, AM=C.amber;
+
+  // 1 line+area
+  const hrs = weeklySeries(1700, 380, 0.6);
+  reg('c1', Object.assign({}, ECHART_BASE, {
+    xAxis: catAxis(WEEK_LABELS, {boundaryGap:false, axisLabel:{interval:23, formatter:v=>v.slice(0,7)}}),
+    yAxis: valAxis(),
+    series:[{ type:'line', data:hrs, smooth:true, showSymbol:false,
+      lineStyle:{width:2,color:A}, areaStyle:{color:areaGrad(A)},
+      emphasis:{focus:'series'} }]
+  }));
+
+  // 2 stacked area shift mix
+  const am=weeklySeries(95,22,0.02), pm=weeklySeries(105,25,0.05), t167=weeklySeries(28,12,0.02);
+  reg('c2', Object.assign({}, ECHART_BASE, {
+    legend:Object.assign({},ECHART_BASE.legend,{data:['AM','PM','167']}),
+    xAxis: catAxis(WEEK_LABELS,{boundaryGap:false, axisLabel:{interval:23, formatter:v=>v.slice(0,7)}}),
+    yAxis: valAxis(),
+    series:[
+      {name:'AM',type:'line',stack:'s',smooth:true,showSymbol:false,lineStyle:{width:0},areaStyle:{color:B+'cc'},data:am},
+      {name:'PM',type:'line',stack:'s',smooth:true,showSymbol:false,lineStyle:{width:0},areaStyle:{color:A+'cc'},data:pm},
+      {name:'167',type:'line',stack:'s',smooth:true,showSymbol:false,lineStyle:{width:0},areaStyle:{color:AM+'cc'},data:t167}
+    ]
+  }));
+
+  // 3 donut department
+  reg('c3', Object.assign({}, ECHART_BASE, {
+    tooltip:{...ECHART_BASE.tooltip, trigger:'item'},
+    legend:{...ECHART_BASE.legend, orient:'vertical', left:0, top:'middle', textStyle:{color:C.text2,fontSize:11}},
+    series:[{ type:'pie', radius:['52%','78%'], center:['64%','52%'], avoidLabelOverlap:true,
+      itemStyle:{borderColor:C.panel,borderWidth:2}, label:{show:false},
+      data:[
+        {name:'Dining Room',value:24785,itemStyle:{color:A}},
+        {name:'Kitchen',value:10463,itemStyle:{color:B}},
+        {name:'Catering-Banquets',value:2466,itemStyle:{color:AM}},
+        {name:'Bar',value:1397,itemStyle:{color:C.violet}},
+        {name:'Other',value:306,itemStyle:{color:C.text3}}
+      ]}]
+  }));
+
+  // 4 stacked bar hours by job
+  const jobs=['Server','Busser','Line Cook','Runner','Bar','Prep'];
+  reg('c4', Object.assign({}, ECHART_BASE, {
+    legend:Object.assign({},ECHART_BASE.legend,{data:['AM','PM','167']}),
+    xAxis: catAxis(jobs,{axisLabel:{fontSize:10,rotate:18}}),
+    yAxis: valAxis(),
+    series:['AM','PM','167'].map((n,i)=>({
+      name:n,type:'bar',stack:'h',barWidth:'52%',
+      itemStyle:{color:[B,A,AM][i]},
+      data:jobs.map(()=>rint(400,1800))
+    }))
+  }));
+
+  // 5 horizontal ranking
+  const top=PEOPLE.filter(p=>p.job==='Server').sort((a,b)=>b.hours-a.hours).slice(0,8).reverse();
+  reg('c5', Object.assign({}, ECHART_BASE, {
+    grid:{left:8,right:24,top:10,bottom:10,containLabel:true},
+    xAxis: valAxis(),
+    yAxis: catAxis(top.map(p=>p.name.split(',')[0]),{extra:{axisLabel:{color:C.text2,fontSize:11}}}),
+    series:[{type:'bar',barWidth:'62%',data:top.map(p=>p.hours),
+      itemStyle:{color:grad(B,A),borderRadius:[0,4,4,0]},
+      label:{show:true,position:'right',color:C.text3,fontFamily:'monospace',fontSize:11}}]
+  }));
+
+  // 6 heatmap day x month
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const months=Array.from({length:18},(_,i)=>{const d=new Date(2023,3+i,1);return d.toISOString().slice(0,7);});
+  const hd=[]; let mx=0;
+  for(let x=0;x<months.length;x++)for(let y=0;y<7;y++){const v=rint(20,90)+(y>=4?30:0);mx=Math.max(mx,v);hd.push([x,y,v]);}
+  reg('c6', Object.assign({}, {}, {
+    tooltip:{...ECHART_BASE.tooltip, position:'top', formatter:p=>`${months[p.data[0]]} ${days[p.data[1]]}: ${p.data[2]} shifts`},
+    grid:{left:44,right:14,top:10,bottom:46,containLabel:true},
+    xAxis:{type:'category',data:months,axisLine:axisLine(),axisTick:{show:false},axisLabel:{color:C.text3,fontSize:9,rotate:40},splitArea:{show:false}},
+    yAxis:{type:'category',data:days,axisLine:axisLine(),axisTick:{show:false},axisLabel:{color:C.text3,fontSize:10}},
+    visualMap:{min:20,max:mx,calculable:true,orient:'horizontal',left:'center',bottom:0,
+      textStyle:{color:C.text3,fontSize:10}, inRange:{color:[C.panel,B,A]}},
+    series:[{type:'heatmap',data:hd,itemStyle:{borderColor:C.bg,borderWidth:2},emphasis:{itemStyle:{borderColor:C.text2}}}]
+  }));
+
+  // 7 grouped bar by day
+  reg('c7', Object.assign({}, ECHART_BASE, {
+    legend:Object.assign({},ECHART_BASE.legend,{data:['AM','PM','167']}),
+    xAxis: catAxis(days),
+    yAxis: valAxis(),
+    series:['AM','PM','167'].map((n,i)=>({name:n,type:'bar',barGap:'10%',barWidth:'22%',
+      itemStyle:{color:[B,A,AM][i],borderRadius:[3,3,0,0]},
+      data:days.map((_,d)=>rint(40,120)+(i===1&&d>=4?60:0))}))
+  }));
+
+  // 8 boxplot
+  const bjobs=['Server','Busser','Line Cook','Runner','Bar'];
+  const bdata=bjobs.map(()=>{const lo=rint(3,4);return [lo,lo+1.5,lo+2.5,lo+4,lo+6];});
+  reg('c8', Object.assign({}, ECHART_BASE, {
+    xAxis: catAxis(bjobs,{axisLabel:{fontSize:10}}),
+    yAxis: valAxis({extra:{name:'hours',nameTextStyle:{color:C.text3}}}),
+    series:[{type:'boxplot',data:bdata,itemStyle:{color:A+'22',borderColor:A},
+      emphasis:{itemStyle:{borderColor:B}}}]
+  }));
+
+  // 9 gantt tenure timeline (custom)
+  const ppl=PEOPLE.slice(0,14).sort((a,b)=>a.first-b.first);
+  const gdata=ppl.map((p,i)=>({value:[i,p.first,p.last,p.active],
+    itemStyle:{color: p.active? A : C.text3}}));
+  reg('c9', {
+    tooltip:{...ECHART_BASE.tooltip, formatter:p=>{const d=p.data.value;return `${ppl[d[0]].name}<br>day ${d[1]} - ${d[2]} (${d[2]-d[1]}d)`;}},
+    grid:{left:120,right:20,top:8,bottom:30,containLabel:false},
+    xAxis:{type:'value',min:0,max:1160,axisLine:axisLine(),splitLine:splitLine(),
+      axisLabel:{color:C.text3,fontSize:10,formatter:v=>'d'+v}},
+    yAxis:{type:'category',data:ppl.map(p=>p.name.split(',')[0]),inverse:true,
+      axisLine:axisLine(),axisTick:{show:false},axisLabel:{color:C.text2,fontSize:11}},
+    series:[{type:'custom',renderItem:(params,api)=>{
+      const cat=api.value(0); const start=api.coord([api.value(1),cat]); const end=api.coord([api.value(2),cat]);
+      const h=12;
+      return {type:'rect',shape:{x:start[0],y:start[1]-h/2,width:Math.max(2,end[0]-start[0]),height:h,r:3},
+        style:{fill:api.visual('color')}};
+    }, encode:{x:[1,2],y:0}, data:gdata}]
+  });
+
+  // 10 radar
+  reg('c10', {
+    tooltip:{...ECHART_BASE.tooltip},
+    radar:{indicator:[
+      {name:'Hours',max:100},{name:'PM',max:100},{name:'Fri/Sat PM',max:100},
+      {name:'167',max:100},{name:'Streak',max:100},{name:'Tenure',max:100}],
+      axisName:{color:C.text2,fontSize:10}, splitLine:{lineStyle:{color:C.grid}},
+      splitArea:{areaStyle:{color:['transparent']}}, axisLine:{lineStyle:{color:C.grid}}},
+    series:[{type:'radar',data:[{value:[88,74,69,40,62,95],
+      areaStyle:{color:A+'33'}, lineStyle:{color:A,width:2}, itemStyle:{color:A}}]}]
+  });
+
+  // 11 gauge
+  reg('c11', {
+    series:[{type:'gauge',startAngle:210,endAngle:-30,min:0,max:100,radius:'92%',center:['50%','58%'],
+      progress:{show:true,width:12,itemStyle:{color:A}},
+      axisLine:{lineStyle:{width:12,color:[[1,C.grid]]}},
+      axisTick:{show:false},splitLine:{show:false},axisLabel:{show:false},pointer:{show:false},
+      anchor:{show:false},
+      detail:{valueAnimation:true,fontSize:30,fontFamily:'monospace',color:C.text,offsetCenter:[0,0],formatter:'{value}%'},
+      data:[{value:63}]}]
+  });
+
+  // 12 scatter tenure vs hours
+  reg('c12', Object.assign({}, ECHART_BASE, {
+    tooltip:{...ECHART_BASE.tooltip, formatter:p=>`${p.data[2]}<br>tenure ${p.data[0]}d, ${p.data[1]}h`},
+    xAxis: valAxis({extra:{name:'tenure (days)',nameTextStyle:{color:C.text3},nameLocation:'middle',nameGap:24}}),
+    yAxis: valAxis({extra:{name:'hours',nameTextStyle:{color:C.text3}}}),
+    series:[{type:'scatter',symbolSize:d=>8+d[1]/600,
+      data:PEOPLE.map(p=>[p.tenure,p.hours,p.name.split(',')[0]]),
+      itemStyle:{color:p=> '#2dd4bf', opacity:.75}}].map(s=>({...s,itemStyle:{color:A,opacity:.7,borderColor:B,borderWidth:.5}}))
+  }));
+}
+render();
+</script>
+</body>
+</html>
